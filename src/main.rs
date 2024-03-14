@@ -1,12 +1,20 @@
 use anyhow::Result;
+use clap::Parser;
 use futures::future::join_all;
 use reqwest::header::{self};
 use rustmaps_api::*;
 use tracing::{info, info_span};
-// use serde_json::Value;
 
-const API_KEY: &str = "";
 const _EXAMPLE_MAP_ID: &str = "34a27cb6ef074ca392441b5de9f28f82";
+
+/// A tool to request a batch of maps from the RustMaps API
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// API key for the RustMaps API
+    #[arg(short = 'k', long, env = "RUSTMAPS_API_KEY")]
+    api_key: Option<String>,
+}
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
@@ -14,12 +22,16 @@ pub async fn main() -> Result<()> {
     let subscriber = tracing_subscriber::FmtSubscriber::new();
     // use that subscriber to process traces emitted after this point
     tracing::subscriber::set_global_default(subscriber)?;
+    // parse the command line arguments
+    let args = Args::parse();
 
     info_span!("Setup");
     let client = reqwest::Client::new();
     let mut headers = header::HeaderMap::new();
-    headers.insert("x-api-key", API_KEY.parse().unwrap());
     headers.insert(header::ACCEPT, "application/json".parse().unwrap());
+    if let Some(api_key) = args.api_key {
+        headers.insert("x-api-key", api_key.parse().unwrap());
+    }
 
     let span = info_span!("GET::Limits").entered();
     let lim_responses_fut: Vec<_> = (0..3)

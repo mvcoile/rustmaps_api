@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::fmt;
 
+#[allow(unused)]
 struct ClientConfig {
     base_url: String,
     api_key: Option<String>,
